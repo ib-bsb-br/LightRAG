@@ -1,6 +1,6 @@
 import copy
-import os
 import json
+import os
 
 import pipmaster as pm  # Pipmaster for dynamic library install
 
@@ -10,9 +10,9 @@ import aioboto3
 import numpy as np
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from lightrag.utils import (

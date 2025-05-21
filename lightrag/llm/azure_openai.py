@@ -1,30 +1,30 @@
 import os
+
 import pipmaster as pm  # Pipmaster for dynamic library install
 
 # install specific modules
 if not pm.is_installed("openai"):
     pm.install("openai")
 
+import numpy as np
 from openai import (
-    AsyncAzureOpenAI,
     APIConnectionError,
-    RateLimitError,
     APITimeoutError,
+    AsyncAzureOpenAI,
+    RateLimitError,
 )
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from lightrag.utils import (
-    wrap_embedding_func_with_attrs,
     locate_json_string_body_from_string,
     safe_unicode_decode,
+    wrap_embedding_func_with_attrs,
 )
-
-import numpy as np
 
 
 @retry(

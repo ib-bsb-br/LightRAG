@@ -2,10 +2,10 @@ import asyncio
 import inspect
 import json
 import os
-import pipmaster as pm
 from dataclasses import dataclass
 from typing import Any, Dict, List, final
 
+import pipmaster as pm
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -13,7 +13,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from lightrag.types import KnowledgeGraph, KnowledgeGraphNode, KnowledgeGraphEdge
+from lightrag.types import KnowledgeGraph, KnowledgeGraphEdge, KnowledgeGraphNode
 from lightrag.utils import logger
 
 from ..base import BaseGraphStorage

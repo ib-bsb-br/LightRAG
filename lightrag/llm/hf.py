@@ -12,23 +12,24 @@ if not pm.is_installed("torch"):
 if not pm.is_installed("numpy"):
     pm.install("numpy")
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import numpy as np
+import torch
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 from lightrag.exceptions import (
     APIConnectionError,
-    RateLimitError,
     APITimeoutError,
+    RateLimitError,
 )
 from lightrag.utils import (
     locate_json_string_body_from_string,
 )
-import torch
-import numpy as np
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 

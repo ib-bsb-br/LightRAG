@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from typing import Any, Union, final
 
 from lightrag.base import (
@@ -12,13 +12,14 @@ from lightrag.utils import (
     logger,
     write_json,
 )
+
 from .shared_storage import (
+    clear_all_update_flags,
+    get_data_init_lock,
     get_namespace_data,
     get_storage_lock,
-    get_data_init_lock,
     get_update_flag,
     set_all_update_flags,
-    clear_all_update_flags,
     try_initialize_namespace,
 )
 

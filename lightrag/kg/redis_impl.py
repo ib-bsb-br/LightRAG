@@ -1,21 +1,22 @@
-import os
-from typing import Any, final
-from dataclasses import dataclass
-import pipmaster as pm
 import configparser
+import os
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from typing import Any, final
+
+import pipmaster as pm
 
 if not pm.is_installed("redis"):
     pm.install("redis")
 
 # aioredis is a depricated library, replaced with redis
-from redis.asyncio import Redis, ConnectionPool  # type: ignore
-from redis.exceptions import RedisError, ConnectionError  # type: ignore
-from lightrag.utils import logger
-
-from lightrag.base import BaseKVStorage
 import json
 
+from redis.asyncio import ConnectionPool, Redis  # type: ignore
+from redis.exceptions import ConnectionError, RedisError  # type: ignore
+
+from lightrag.base import BaseKVStorage
+from lightrag.utils import logger
 
 config = configparser.ConfigParser()
 config.read("config.ini", "utf-8")

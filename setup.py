@@ -1,5 +1,6 @@
-import setuptools
 from pathlib import Path
+
+import setuptools
 
 
 # Reading the long description from README.md

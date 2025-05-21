@@ -2,16 +2,17 @@
 Configs for the LightRAG API.
 """
 
-import os
 import argparse
 import logging
+import os
+
 from dotenv import load_dotenv
-from lightrag.utils import get_env_value
 
 from lightrag.constants import (
-    DEFAULT_WOKERS,
     DEFAULT_TIMEOUT,
+    DEFAULT_WOKERS,
 )
+from lightrag.utils import get_env_value
 
 # use the .env that is inside the current folder
 # allows to use different .env file for each lightrag instance
