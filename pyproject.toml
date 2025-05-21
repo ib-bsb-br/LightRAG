@@ -260,7 +260,6 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto" # Keeps existing line endings
 docstring-code-format = true
-# Corrected field name below:
 exclude = [
     "lightrag/api/webui",
     "lightrag_webui",
