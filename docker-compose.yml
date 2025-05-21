@@ -96,7 +96,7 @@ services:
       LIGHTRAG_VECTOR_STORAGE: "PGVectorStorage"
       LIGHTRAG_GRAPH_STORAGE: "Neo4JStorage"
       LIGHTRAG_DOC_STATUS_STORAGE: "PGDocStatusStorage"
-      
+
       # Other LightRAG settings
       ENABLE_LLM_CACHE_FOR_EXTRACT: "${ENABLE_LLM_CACHE_FOR_EXTRACT:-true}"
       AUTH_ACCOUNTS: ${AUTH_ACCOUNTS}
