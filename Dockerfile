@@ -3,6 +3,16 @@
 # ---- Builder Stage: Install dependencies with uv ----
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS builder
 
+# Define build arguments for GitHub secrets
+ARG POSTGRES_PASSWORD
+ARG NEO4J_PASSWORD
+ARG OPENAI_API_KEY
+ARG POSTGRES_USER
+ARG POSTGRES_DB
+ARG LLM_MODEL
+ARG EMBEDDING_MODEL
+ARG EMBEDDING_DIM
+
 # Set uv environment variables for optimal behavior in Docker
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -44,6 +54,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---- Final Stage: Create a minimal runtime image ----
 FROM python:3.11-slim-bookworm AS final
 
+# Define build arguments for GitHub secrets in the final stage
+ARG POSTGRES_PASSWORD
+ARG NEO4J_PASSWORD
+ARG OPENAI_API_KEY
+ARG POSTGRES_USER=lightrag_user
+ARG POSTGRES_DB=lightrag_db
+ARG LLM_MODEL=gpt-4o-mini
+ARG EMBEDDING_MODEL=text-embedding-3-small
+ARG EMBEDDING_DIM=1536
+
 # Set core environment variables for the runtime
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -51,7 +71,16 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/usr/local/bin:$PATH" \
     WORKING_DIR="/app/data/rag_storage" \
     INPUT_DIR="/app/data/inputs" \
-    PORT="8000" # Application's internal listening port
+    PORT="8000" \
+    # Set environment variables from build arguments
+    POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+    NEO4J_PASSWORD=${NEO4J_PASSWORD} \
+    OPENAI_API_KEY=${OPENAI_API_KEY} \
+    POSTGRES_USER=${POSTGRES_USER} \
+    POSTGRES_DB=${POSTGRES_DB} \
+    LLM_MODEL=${LLM_MODEL} \
+    EMBEDDING_MODEL=${EMBEDDING_MODEL} \
+    EMBEDDING_DIM=${EMBEDDING_DIM} # Application's internal listening port
 
 WORKDIR /app
 

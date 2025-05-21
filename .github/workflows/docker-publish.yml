@@ -69,6 +69,16 @@ jobs:
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Pass GitHub secrets as build arguments
+          build-args: |
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            NEO4J_PASSWORD=${{ secrets.NEO4J_PASSWORD }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER || 'lightrag_user' }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB || 'lightrag_db' }}
+            LLM_MODEL=${{ secrets.LLM_MODEL || 'gpt-4o-mini' }}
+            EMBEDDING_MODEL=${{ secrets.EMBEDDING_MODEL || 'text-embedding-3-small' }}
+            EMBEDDING_DIM=${{ secrets.EMBEDDING_DIM || '1536' }}
 
       - name: Generate artifact attestation
         # Only generate attestation if the image was successfully pushed
