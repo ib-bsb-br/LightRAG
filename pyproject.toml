@@ -1,0 +1,280 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+backend-path = ["."] # Explicitly state that setup.py is in the root
+
+[project]
+name = "lightrag-hku"
+version = "1.3.8" # From lightrag/__init__.py
+authors = [
+  { name = "Zirui Guo", email = "contact@example.com" } # Placeholder email
+]
+description = "Simple and Fast Retrieval-Augmented Generation" # From README.md
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" } # From LICENSE file
+keywords = ["RAG", "Knowledge Graph", "LLM", "Retrieval-Augmented Generation", "AI", "NLP"]
+classifiers = [
+    "Development Status :: 4 - Beta", # Assuming Beta based on version and features
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Indexing",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+dependencies = [
+    # Core dependencies from root requirements.txt and common usage
+    "aiohttp", # For async HTTP requests, e.g., in lollms.py
+    "pandas>=2.0.0", # For data export functionality
+    "pipmaster", # For dynamic library installation in LLM modules
+    "pydantic", # For data validation and settings
+    "python-dotenv", # For .env file handling
+    "pyuca", # For Unicode Collation Algorithm (sorting)
+    "tenacity", # For retrying operations
+    "tiktoken", # Default tokenizer
+    "xlsxwriter>=3.1.0", # For Excel export
+    "numpy", # Used in EmbeddingFunc, vector storages, etc.
+    "networkx", # Default graph storage and graph examples
+    "httpx", # Used in utils.py and exceptions.py for HTTP clients
+]
+
+[project.urls]
+"Homepage" = "https://github.com/HKUDS/LightRAG"
+"Repository" = "https://github.com/HKUDS/LightRAG"
+"Documentation" = "https://github.com/HKUDS/LightRAG/blob/main/README.md" # Main README as primary doc
+"Bug Tracker" = "https://github.com/HKUDS/LightRAG/issues"
+
+[project.optional-dependencies]
+# Dependencies for the API server component
+api = [
+    "aiofiles", # From lightrag/api/requirements.txt
+    "ascii_colors", # From lightrag/api/requirements.txt
+    "asyncpg", # From lightrag/api/requirements.txt, for PostgreSQL async
+    "distro", # From lightrag/api/requirements.txt
+    "fastapi", # From lightrag/api/requirements.txt
+    "graspologic>=3.4.1", # From lightrag/api/requirements.txt
+    "httpcore", # From lightrag/api/requirements.txt, often a dep of httpx/fastapi
+    "jiter", # From lightrag/api/requirements.txt, for JSON parsing
+    "openai", # From lightrag/api/requirements.txt, default LLM/Embedding
+    "passlib[bcrypt]", # From lightrag/api/requirements.txt, for auth
+    "PyJWT", # From lightrag/api/requirements.txt, for auth
+    "python-jose[cryptography]", # From lightrag/api/requirements.txt, for auth
+    "python-multipart", # From lightrag/api/requirements.txt, for FastAPI file uploads
+    "pytz", # From lightrag/api/requirements.txt
+    "uvicorn", # From lightrag/api/requirements.txt
+    # Document parsers from Dockerfile and document_routes.py
+    "pypdf2",
+    "python-docx",
+    "python-pptx",
+    "openpyxl",
+    # Default LLM/Embedding backend for Ollama emulation
+    "ollama", # From lightrag/api/requirements.txt
+    # Default vector store used by API
+    "nano-vectordb", # From Dockerfile
+]
+
+# Dependencies for the 3D graph visualization tool
+tools = [
+    "imgui_bundle", # From lightrag/tools/lightrag_visualizer/requirements.txt
+    "moderngl", # From lightrag/tools/lightrag_visualizer/requirements.txt
+    "pyglm", # From lightrag/tools/lightrag_visualizer/requirements.txt
+    "python-louvain", # From lightrag/tools/lightrag_visualizer/requirements.txt
+    "scipy", # From lightrag/tools/lightrag_visualizer/requirements.txt
+    "tk", # From lightrag/tools/lightrag_visualizer/requirements.txt
+]
+
+# Specific storage backend dependencies
+postgres-storage = [
+    "psycopg2-binary", # For PG*Storage classes, also in Dockerfile
+    # asyncpg is already in 'api' extra
+]
+neo4j-storage = [
+    "neo4j", # For Neo4JStorage, also in Dockerfile
+]
+milvus-storage = [
+    "pymilvus", # For MilvusVectorDBStorage
+]
+chroma-storage = [
+    "chromadb", # For ChromaVectorDBStorage
+]
+faiss-storage = [
+    "faiss-cpu", # For FaissVectorDBStorage, user can install faiss-gpu if needed
+]
+qdrant-storage = [
+    "qdrant-client", # For QdrantVectorDBStorage
+]
+redis-storage = [
+    "redis", # For RedisKVStorage
+]
+mongo-storage = [
+    "motor", # Async MongoDB driver
+    "pymongo", # Sync MongoDB driver (used for SearchIndexModel)
+]
+# tidb-storage = ["sqlalchemy"] # If TiDB support is re-enabled
+
+# Specific LLM backend dependencies (beyond default 'openai' and 'ollama' included in 'api')
+anthropic-llm = [
+    "anthropic",
+    "voyageai", # For embeddings with Anthropic models
+]
+bedrock-llm = [
+    "aioboto3", # For Bedrock integration
+]
+hf-llm = [
+    "transformers",
+    "torch",
+    "sentence-transformers", # For embeddings in hf.py examples
+]
+# jina-llm: httpx is already in core
+llama-index-llm = [
+    "llama-index-core",
+    "llama-index-llms-litellm",
+    "llama-index-embeddings-litellm",
+    "llama-index-llms-openai", # If using OpenAI via LlamaIndex
+    "llama-index-embeddings-openai", # If using OpenAI embeddings via LlamaIndex
+]
+lmdeploy-llm = [
+    "lmdeploy",
+]
+lollms-llm = [
+    "lollms-client", # Assuming this is the correct package name
+]
+# nvidia-llm: openai is already in 'api' extra, as NVIDIA APIs are OpenAI-compatible
+# siliconcloud-llm: httpx is already in core
+zhipu-llm = [
+    "zhipuai",
+]
+
+# Grouping of all storage backend dependencies
+all-storages = [
+    "lightrag-hku[postgres-storage, neo4j-storage, milvus-storage, chroma-storage, faiss-storage, qdrant-storage, redis-storage, mongo-storage]", # Add tidb-storage if re-enabled
+]
+
+# Grouping of all LLM backend dependencies
+all-llms = [
+    "lightrag-hku[anthropic-llm, bedrock-llm, hf-llm, llama-index-llm, lmdeploy-llm, lollms-llm, zhipu-llm]", # jina, nvidia, siliconcloud covered by core/api
+]
+
+# All optional dependencies combined
+all = [
+    "lightrag-hku[api, tools, all-storages, all-llms]",
+]
+
+[project.scripts]
+lightrag-server = "lightrag.api.lightrag_server:main"
+lightrag-gunicorn = "lightrag.api.run_with_gunicorn:main"
+lightrag-viewer = "lightrag.tools.lightrag_visualizer.graph_visualizer:main"
+
+[tool.setuptools.packages.find]
+where = ["."] # Look for packages in the current directory
+include = ["lightrag*"] # Include all packages starting with "lightrag"
+exclude = ["tests*", "examples*", "reproduce*", "lightrag_webui*"] # Exclude tests, examples, reproduce, and webui source
+
+[tool.setuptools.package-data]
+# Include the built webui static files for the api
+"lightrag.api" = ["webui/assets/*", "webui/*.*"] # More specific to include index.html, logo.svg etc. at webui root
+# Include assets for the visualizer tool
+"lightrag.tools.lightrag_visualizer" = ["assets/*"]
+# Include py.typed for type checking
+"lightrag" = ["py.typed"]
+
+
+[tool.setuptools]
+include-package-data = true # Respect MANIFEST.in for other data files if any
+
+# Ruff configuration (linter and formatter)
+# https://docs.astral.sh/ruff/configuration/
+[tool.ruff]
+src = ["lightrag"] # Specify source directory for Ruff
+fix = true
+extend-exclude = [
+    "lightrag/api/webui", # Exclude generated/vendored JS/CSS code
+    "lightrag_webui", # Exclude the entire webui source directory
+]
+
+[tool.ruff.lint]
+select = ["ALL"] # Enable all rules and then selectively ignore
+ignore = [
+    "E402",    # Module level import not at top of file
+    "E501",    # Line too long (handled by formatter)
+    "ANN101",  # Missing type annotation for self
+    "ANN102",  # Missing type annotation for cls
+    "ANN001",  # Missing type annotation for function argument
+    "ANN002",  # Missing type annotation for *args
+    "ANN003",  # Missing type annotation for **kwargs
+    "ANN201",  # Missing return type for public function
+    "ANN202",  # Missing return type for public method
+    "ANN204",  # Missing return type for __init__
+    "ANN401",  # Dynamically typed expressions (typing.Any) - can be too strict initially
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", # Docstring rules
+    "FBT001", "FBT002", # Boolean positional arguments
+    "S101",    # Use of assert
+    "ARG001",  # Unused function argument
+    "ARG002",  # Unused method argument
+    "PLR0913", # Too many arguments to function call
+    "PLR2004", # Magic value used in comparison
+    "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
+    "T201",    # print found
+    "FIX002",  # Line contains TODO
+    "TD002",   # Missing author in TODO
+    "TD003",   # Missing issue link in TODO
+    "TRY003",  # Avoid specifying long messages outside the exception class
+    "EM101",   # Exception must not use a string literal, assign to variable first
+    "EM102",   # Exception must not use an f-string literal, assign to variable first
+    "N802",    # Function name should be lowercase (for classes like EmbeddingFunc)
+    "N803",    # Argument name should be lowercase
+    "N806",    # Variable in function should be lowercase
+    "N815",    # Variable in class scope should be lowercase
+    "PT001",   # Use @pytest.fixture() instead of @pytest.fixture
+    "PGH003",  # Use specific rule codes for noqa
+    "INP001",  # File is part of an implicit namespace package
+    "CPY001",  # Unnecessary `copy` usage
+    "BLE001",  # Do not catch blind exception: `Exception`
+    "A003",    # Class attribute is shadowing a Python builtin
+    "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "PLW2901", # `for` loop variable `_` overwritten by assignment target
+]
+per-file-ignores = {
+    "__init__.py" = ["F401", "F403"], # F401: unused-import, F403: star import
+    "lightrag/api/routers/*" = ["ARG001", "F841"],
+    "lightrag/utils_graph.py" = ["ARG001"],
+    "lightrag/utils.py" = ["ARG001", "PLR0912"], # PLR0912: Too many branches
+    "lightrag/operate.py" = ["ARG001", "PLR0912", "PLR0915"], # PLR0915: Too many statements
+    "lightrag/llm/*" = ["ARG001"],
+    "lightrag/kg/*" = ["ARG001", "PLR0912", "PLR0915"],
+    "lightrag/lightrag.py" = ["PLR0912", "PLR0915", "N805"], # N805: First argument of a method should be self
+    "lightrag/base.py" = ["A003"], # A003: Class attribute `id` is shadowing a Python builtin
+}
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto" # Keeps existing line endings
+docstring-code-format = true
+extend-exclude = [
+    "lightrag/api/webui",
+    "lightrag_webui",
+]
+
+# MyPy configuration (optional, for static type checking)
+# [tool.mypy]
+# python_version = "3.10"
+# warn_return_any = true
+# warn_unused_configs = true
+# exclude = ['lightrag/api/webui', 'lightrag_webui']
+# follow_imports = "silent"
+# ignore_missing_imports = true
+# allow_redefinition = true # Allow redefinition of variables, e.g. in operate.py
+# # Per-module options can be added here if needed
+# [[tool.mypy.overrides]]
+# module = "lightrag.kg.*"
+# ignore_errors = true # Example: ignore all errors in a specific module during initial setup
