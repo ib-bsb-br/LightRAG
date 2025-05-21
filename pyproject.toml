@@ -242,9 +242,8 @@ ignore = [
     "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
     "PLW2901", # `for` loop variable `_` overwritten by assignment target
 ]
-# Note: No "per-file-ignores = {" line here anymore. It becomes a new table header below.
 
-[tool.ruff.lint.per-file-ignores] # DEFINES A SUB-TABLE
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"] # F401: unused-import, F403: star import
 "lightrag/api/routers/*" = ["ARG001", "F841"]
 "lightrag/utils_graph.py" = ["ARG001"]
@@ -261,7 +260,8 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto" # Keeps existing line endings
 docstring-code-format = true
-extend-exclude = [
+# Corrected field name below:
+exclude = [
     "lightrag/api/webui",
     "lightrag_webui",
 ]
