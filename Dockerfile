@@ -36,14 +36,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system --no-cache .[api] \
     psycopg2-binary \
     neo4j \
-    # Install dependencies for default storage
     nano-vectordb \
     networkx \
-    # Install dependencies for default LLM
     openai \
     ollama \
     tiktoken \
-    # Install dependencies for default document loader
     pypdf2 \
     python-docx \
     python-pptx \
@@ -67,12 +64,10 @@ ARG EMBEDDING_DIM=1536
 # Set core environment variables for the runtime
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    # PATH for executables installed by uv/pip in the builder's system site-packages
     PATH="/usr/local/bin:$PATH" \
     WORKING_DIR="/app/data/rag_storage" \
     INPUT_DIR="/app/data/inputs" \
     PORT="8000" \
-    # Set environment variables from build arguments
     POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
     NEO4J_PASSWORD=${NEO4J_PASSWORD} \
     OPENAI_API_KEY=${OPENAI_API_KEY} \
@@ -80,7 +75,7 @@ ENV PYTHONUNBUFFERED=1 \
     POSTGRES_DB=${POSTGRES_DB} \
     LLM_MODEL=${LLM_MODEL} \
     EMBEDDING_MODEL=${EMBEDDING_MODEL} \
-    EMBEDDING_DIM=${EMBEDDING_DIM} # Application's internal listening port
+    EMBEDDING_DIM=${EMBEDDING_DIM}
 
 WORKDIR /app
 
