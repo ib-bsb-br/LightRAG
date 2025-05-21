@@ -9,11 +9,11 @@ volumes:
   lightrag_rag_storage_data: # Persistent storage for LightRAG's WORKDIR
   lightrag_input_data:       # Persistent storage for LightRAG's INPUT_DIR
 
-# Define a custom internal network for secure inter-service communication
+# Define a custom network for inter-service communication
 networks:
   lightrag_internal_net:
     driver: bridge
-    internal: true # Set to true for the containers on this network to communicate
+    internal: false # Set to false to allow external access to services
 
 services:
   postgres:
@@ -42,11 +42,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s # Give the DB time to start before first check
-    deploy: # Configure this in order to not have any resource limits
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: '7G'
+    # Resource constraints for plain Docker Compose
+    cpus: '2.0'
+    mem_limit: '7G'
 
   neo4j:
     image: neo4j:5-community # Using Neo4j Community Edition (or enterprise if licensed)
