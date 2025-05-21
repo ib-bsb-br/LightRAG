@@ -47,10 +47,9 @@ htmlcov/
 .logfire
 temp/
 
-# Exclude siles and folders
+# Exclude files and folders
 *.yml
 .dockerignore
-Dockerfile
 Makefile
 
 # Exclude other projects
