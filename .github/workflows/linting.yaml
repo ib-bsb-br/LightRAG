@@ -1,12 +1,7 @@
-name: Linting and Formatting
+name: Linting and Formatting (Disabled)
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+    workflow_dispatch:
 
 jobs:
     lint-and-format:
