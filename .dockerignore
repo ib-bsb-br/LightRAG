@@ -1,23 +1,51 @@
 # Python-related files and directories
-__pycache__
-.cache
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Virtual environment directories
-*.venv
+# Distribution / build files
+build/
+dist/
+wheels/
+*.egg-info/
+*.egg
+*.log
+site
+*.tgz
+*.tar.gz
+.eggs/
 
-# Env
+# Virtual environments
+.venv/
 env/
+venv/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Secrets and local config
+.env
 *.env*
 .env_example
 
-# Distribution / build files
-site
-dist/
-build/
-.eggs/
-*.egg-info/
-*.tgz
-*.tar.gz
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Cache
+.cache/
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.gradio
+.logfire
+temp/
 
 # Exclude siles and folders
 *.yml
@@ -31,30 +59,6 @@ Makefile
 
 # Python version manager file
 .python-version
-
-# Reports
-*.coverage/
-*.log
-log/
-*.logfire
-
-# Cache
-.cache/
-.mypy_cache
-.pytest_cache
-.ruff_cache
-.gradio
-.logfire
-temp/
-
-# MacOS-related files
-.DS_Store
-
-# VS Code settings (local configuration files)
-.vscode
-
-# file
-TODO.md
 
 # Exclude Git-related files
 .git
