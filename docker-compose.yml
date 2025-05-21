@@ -1,21 +1,116 @@
+version: '3.8'
+
+# Define named volumes for persistent data storage
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_plugins:
+  lightrag_rag_storage_data:
+  lightrag_input_data:
+
+# Define a custom internal network for secure inter-service communication
+networks:
+  lightrag_internal_net:
+    driver: bridge
+    internal: false # Set to true if ONLY containers on this network should communicate
+
 services:
-  lightrag:
-    container_name: lightrag
-    image: ghcr.io/hkuds/lightrag:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-      tags:
-        - ghcr.io/hkuds/lightrag:latest
-    ports:
-      - "${PORT:-9621}:9621"
+  postgres:
+    image: pgvector/pgvector:pg16 # PostgreSQL 16 with pgvector extension
+    container_name: lightrag_postgres_db
+    restart: unless-stopped
     volumes:
-      - ./data/rag_storage:/app/data/rag_storage
-      - ./data/inputs:/app/data/inputs
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - lightrag_internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: lightrag_neo4j_db
+    restart: unless-stopped
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_plugins:/plugins
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
+    networks:
+      - lightrag_internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  lightrag:
+    image: ${DOCKER_REGISTRY_HOST:-ghcr.io}/${DOCKER_IMAGE_NAME:-ib-bsb-br/LightRAG}:${IMAGE_TAG:-latest}
+    container_name: lightrag_app_server
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # Expose LightRAG's API on host port 8000
+    volumes:
+      - lightrag_rag_storage_data:/app/data/rag_storage
+      - lightrag_input_data:/app/data/inputs
       - ./config.ini:/app/config.ini
       - ./.env:/app/.env
     env_file:
       - .env
-    restart: unless-stopped
+    environment:
+      # Application Server Configuration
+      PORT: "8000"
+
+      # OpenAI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_BASE: ${OPENAI_API_BASE:-https://api.openai.com/v1}
+      LLM_BINDING: "openai"
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      EMBEDDING_BINDING: "openai"
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      EMBEDDING_DIM: ${EMBEDDING_DIM:-1536}
+
+      # Database Connection Details
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      NEO4J_URI: "bolt://neo4j:7687"
+      NEO4J_USERNAME: "neo4j"
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+
+      # LightRAG Storage Backend Configuration
+      LIGHTRAG_KV_STORAGE: "PGKVStorage"
+      LIGHTRAG_VECTOR_STORAGE: "PGVectorStorage"
+      LIGHTRAG_GRAPH_STORAGE: "Neo4JStorage"
+      LIGHTRAG_DOC_STATUS_STORAGE: "PGDocStatusStorage"
+
+      # Other LightRAG settings
+      ENABLE_LLM_CACHE_FOR_EXTRACT: "${ENABLE_LLM_CACHE_FOR_EXTRACT:-true}"
+      AUTH_ACCOUNTS: ${AUTH_ACCOUNTS}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+      TOKEN_EXPIRE_HOURS: ${TOKEN_EXPIRE_HOURS:-4}
+      TIMEOUT: ${TIMEOUT:-300}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    networks:
+      - lightrag_internal_net
     extra_hosts:
       - "host.docker.internal:host-gateway"
