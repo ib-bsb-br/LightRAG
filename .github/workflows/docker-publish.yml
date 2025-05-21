@@ -1,3 +1,4 @@
+# .github/workflows/docker-publish.yml
 name: Build and Publish LightRAG Docker Image
 
 on:
@@ -5,33 +6,37 @@ on:
     branches:
       - main # Trigger on pushes to the main branch
     tags:
-      - 'v*.*.*' # Trigger on semantic version tags
-  workflow_dispatch: # Allows manual triggering
+      - 'v*.*.*' # Trigger on semantic version tags (e.g., v1.0.0, v1.2.3)
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
 
 env:
+  # For GHCR, the image name is typically ghcr.io/OWNER/REPO_NAME
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      attestations: write
+      contents: read # To checkout the repository code
+      packages: write # To push to GitHub Container Registry (GHCR)
+      attestations: write # To generate SLSA provenance
+      id-token: write    # Required for attestations@v2
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (for multi-platform builds)
+      - name: Set up QEMU (if trully needed, focus on builds for amd64 linux platforms)
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: image=moby/buildkit:v0.13.1
+          # Pin buildkit version for stability and consistent behavior
+          driver-opts: image=moby/buildkit:v0.13.1 # Or a more recent stable version
 
       - name: Login to GitHub Container Registry (GHCR)
+        # Only login for actual pushes (main branch or tags), not for pull requests.
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
@@ -46,10 +51,11 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=schedule,pattern=nightly,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix=,suffix=,format=short
+            type=ref,event=branch,enable=${{ github.ref == 'refs/heads/main' }} # Tag with 'main' for main branch pushes
+            type=semver,pattern={{version}} # e.g., v1.2.3
+            type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') }} # e.g., v1.2
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }} # 'latest' tag for main branch
+            type=sha,prefix=,suffix=,format=short # Git commit SHA
 
       - name: Build and push Docker image
         id: push
@@ -57,6 +63,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          # Push only on pushes to main branch or on tag creation, or manual workflow_dispatch
           push: ${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -65,8 +72,9 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Generate artifact attestation
+        # Only generate attestation if the image was successfully pushed
         if: steps.push.outputs.digest && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) || github.event_name == 'workflow_dispatch')
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
