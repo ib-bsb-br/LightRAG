@@ -1,4 +1,19 @@
 {
+  "name": "LightRAG Development",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  },
+  "forwardPorts": [8000],
+  "postCreateCommand": "pip install -e .[api]",
   "tasks": {
     "build": "pip install -e . && pip install -r requirements.txt && pip install pre-commit",
     "test": "pytest"

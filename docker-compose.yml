@@ -20,7 +20,7 @@ services:
     image: pgvector/pgvector:pg16 # Using PostgreSQL 16 with pgvector extension
     container_name: lightrag_postgres
     restart: unless-stopped
-    # LightRAG connects via the internal network using the service name 'postgres'.    
+    # LightRAG connects via the internal network using the service name 'postgres'.
     # Ports must be exposed to the host by default for internal services
     # So, to access Postgres from the host (e.g., for psql client), this is uncommented:
     ports:
