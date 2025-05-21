@@ -34,9 +34,9 @@ site/ # Often a build output directory
 .ruff_cache/
 
 # Secrets and local configuration files
-# I specifically want it in the Docker image, so I will comment it out, as follows
-# *.env
-# .env.example
+# IMPORTANT: Never include sensitive files in the Docker build context
+*.env
+.env.example
 
 # Test & Coverage Reports
 *.coverage

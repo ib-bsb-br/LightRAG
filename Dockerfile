@@ -25,9 +25,21 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system --no-cache .[api] \
     psycopg2-binary \
-    neo4j
-# Note: If 'lightrag-hku[api]' already pulls in psycopg2-binary and neo4j,
-# we can remove them from the explicit install line above.
+    neo4j \
+    # Install dependencies for default storage
+    nano-vectordb \
+    networkx \
+    # Install dependencies for default LLM
+    openai \
+    ollama \
+    tiktoken \
+    # Install dependencies for default document loader
+    pypdf2 \
+    python-docx \
+    python-pptx \
+    openpyxl
+# Note: If 'lightrag-hku[api]' already pulls in these dependencies,
+# we can remove them from the explicit install lines above.
 
 # ---- Final Stage: Create a minimal runtime image ----
 FROM python:3.11-slim-bookworm AS final
