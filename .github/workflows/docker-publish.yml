@@ -26,8 +26,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (if truly needed, focus on builds for amd64 linux platforms)
-        uses: docker/setup-qemu-action@v3
+# Removed the QEMU setup step as it is unnecessary for amd64-only builds.
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
