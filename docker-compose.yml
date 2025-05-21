@@ -1,109 +1,133 @@
 version: '3.8'
 
-# Define named volumes for persistent data storage
+# Define named volumes for persistent data storage for all services
 volumes:
   postgres_data:
   neo4j_data:
   neo4j_logs:
   neo4j_plugins:
-  lightrag_rag_storage_data:
-  lightrag_input_data:
+  lightrag_rag_storage_data: # Persistent storage for LightRAG's WORKDIR
+  lightrag_input_data:       # Persistent storage for LightRAG's INPUT_DIR
 
-# Define a custom internal network for secure inter-service communication
+# Define a custom network for inter-service communication
 networks:
   lightrag_internal_net:
     driver: bridge
-    internal: false # Set to true if ONLY containers on this network should communicate
+    internal: false # Set to false to allow external access to services
 
 services:
   postgres:
-    image: pgvector/pgvector:pg16 # PostgreSQL 16 with pgvector extension
-    container_name: lightrag_postgres_db
+    image: pgvector/pgvector:pg16 # Using PostgreSQL 16 with pgvector extension
+    container_name: lightrag_postgres
     restart: unless-stopped
+    # LightRAG connects via the internal network using the service name 'postgres'.
+    # Ports must be exposed to the host by default for internal services
+    # So, to access Postgres from the host (e.g., for psql client), this is uncommented:
+    ports:
+      - "127.0.0.1:5432:5432" # Binds to localhost only for host access
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data # Persistent data volume
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql # Mount init script
     environment:
+      # IMPORTANT: These variables must be set via .env file and Ansible Vault.
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     networks:
-      - lightrag_internal_net
+      - lightrag_internal_net # Connect to the internal network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      # Correct syntax for environment variables in shell commands within YAML: use single '$'
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 10s # Give the DB time to start before first check
+    # Resource constraints for plain Docker Compose
+    cpus: '2.0'
+    mem_limit: '7G'
 
   neo4j:
-    image: neo4j:5-community
-    container_name: lightrag_neo4j_db
+    image: neo4j:5-community # Using Neo4j Community Edition (or enterprise if licensed)
+    container_name: lightrag_neo4j
     restart: unless-stopped
+    # Neo4j ports are not exposed to the host by default for internal services for security.
+    # LightRAG connects via the internal network using the service name 'neo4j'.
+    # If we need to access Neo4j Browser or Bolt from the host, uncomment:
+    # ports:
+    #   - "127.0.0.1:7474:7474" # Neo4j Browser (HTTP)
+    #   - "127.0.0.1:7687:7687" # Neo4j Bolt protocol
     volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
-      - neo4j_plugins:/plugins
+      - neo4j_data:/data        # Persistent database data
+      - neo4j_logs:/logs        # Persistent logs
+      - neo4j_plugins:/plugins  # Persistent plugins (e.g., APOC)
     environment:
+      # IMPORTANT: These variables must be set via .env file and Ansible Vault.
       NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
-      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_PLUGINS: '["apoc"]' # Enable APOC plugin.
+      # NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes" # Uncomment for Neo4j Enterprise Edition
     networks:
-      - lightrag_internal_net
+      - lightrag_internal_net # Connect to the internal network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 20s
+    # deploy: # Uncomment and configure for resource limits
+    #   resources:
+    #     limits:
+    #       cpus: '3.0'
+    #       memory: '7G'
 
   lightrag:
-    image: ${DOCKER_REGISTRY_HOST:-ghcr.io}/${DOCKER_IMAGE_NAME:-ib-bsb-br/LightRAG}:${IMAGE_TAG:-latest}
-    container_name: lightrag_app_server
+    # The image will be pulled from the registry defined in the .env file
+    # DOCKER_REGISTRY_HOST, DOCKER_IMAGE_NAME, and IMAGE_TAG should be set in .env
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME}:${IMAGE_TAG}
+    container_name: lightrag_app_server # Changed from 'lightrag' to avoid conflict with service name
     restart: unless-stopped
     ports:
-      - "8000:8000" # Expose LightRAG's API on host port 8000
+      - "8000:8000" # Host port 8000 maps to container port 8000
     volumes:
+      # Use named volumes for persistent data
       - lightrag_rag_storage_data:/app/data/rag_storage
       - lightrag_input_data:/app/data/inputs
-      - ./config.ini:/app/config.ini
-      - ./.env:/app/.env
+      # If LightRAG uses a config.ini and it's not part of the image, mount it:
+      # - ./config.ini:/app/config.ini:ro # Mount config.ini if used by app
+    # Load environment variables from .env file located in the same directory as this compose file
     env_file:
       - .env
+    # Environment variables can also be set here, overriding .env file values if present
     environment:
-      # Application Server Configuration
-      PORT: "8000"
+      # --- Application Server Configuration ---
+      PORT: "8000" # LightRAG application will listen on this port inside the container
 
-      # OpenAI Configuration
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_API_BASE: ${OPENAI_API_BASE:-https://api.openai.com/v1}
+      # --- OpenAI Configuration (API keys and models) ---
+      # OPENAI_API_KEY is expected from .env file or github secrets
+      # OPENAI_API_BASE is expected from .env file (or defaults there) or github secrets
       LLM_BINDING: "openai"
-      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       EMBEDDING_BINDING: "openai"
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
-      EMBEDDING_DIM: ${EMBEDDING_DIM:-1536}
+      # LLM_MODEL is expected from .env file (e.g., gpt-4o-mini) or github secrets
+      # EMBEDDING_MODEL is expected from .env file (e.g., text-embedding-3-small) or github secrets
+      # EMBEDDING_DIM is expected from .env file (e.g., 1536) or github secrets
 
-      # Database Connection Details
+      # --- Database Connection Details (credentials from .env file) ---
       POSTGRES_HOST: "postgres"
       POSTGRES_PORT: "5432"
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      # POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB are expected from .env file or github secrets
       NEO4J_URI: "bolt://neo4j:7687"
       NEO4J_USERNAME: "neo4j"
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      # NEO4J_PASSWORD is expected from .env file or github secrets
 
-      # LightRAG Storage Backend Configuration
+      # --- LightRAG Storage Backend Configuration ---
       LIGHTRAG_KV_STORAGE: "PGKVStorage"
       LIGHTRAG_VECTOR_STORAGE: "PGVectorStorage"
       LIGHTRAG_GRAPH_STORAGE: "Neo4JStorage"
       LIGHTRAG_DOC_STATUS_STORAGE: "PGDocStatusStorage"
 
-      # Other LightRAG settings
-      ENABLE_LLM_CACHE_FOR_EXTRACT: "${ENABLE_LLM_CACHE_FOR_EXTRACT:-true}"
-      AUTH_ACCOUNTS: ${AUTH_ACCOUNTS}
-      TOKEN_SECRET: ${TOKEN_SECRET}
-      TOKEN_EXPIRE_HOURS: ${TOKEN_EXPIRE_HOURS:-4}
-      TIMEOUT: ${TIMEOUT:-300}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # --- Other Application Settings (from .env file or defaults here) ---
+      # AUTH_ACCOUNTS, TOKEN_SECRET, TOKEN_EXPIRE_HOURS, TIMEOUT, LOG_LEVEL,
+      # HOST, WEBUI_TITLE, WEBUI_DESCRIPTION, ENABLE_LLM_CACHE_FOR_EXTRACT
+      # are expected to be set via the .env file as per the .env.example. or github secrets
 
     depends_on:
       postgres:
@@ -112,5 +136,3 @@ services:
         condition: service_healthy
     networks:
       - lightrag_internal_net
-    extra_hosts:
-      - "host.docker.internal:host-gateway"

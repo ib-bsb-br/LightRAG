@@ -1,24 +1,16 @@
-# Python-related files and directories
+# Git specific
+.git/
+.gitignore
+
+# Python specific
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Distribution / build files
-build/
-dist/
-wheels/
 *.egg-info/
 *.egg
-*.log
-site
-*.tgz
-*.tar.gz
-.eggs/
-
-# Virtual environments
-.venv/
-env/
-venv/
+.venv/ # General virtual environment folder
+env/   # Another common name for virtual environment
+venv/  # Yet another common name
 
 # IDE / Editor specific
 .vscode/
@@ -27,40 +19,39 @@ venv/
 *.swo
 .DS_Store
 
-# Secrets and local config
-.env
-*.env*
-.env_example
-
-# Test artifacts
+# Build artifacts and caches
+build/
+dist/
+wheels/
+site/ # Often a build output directory
+*.log
+*.log.*
+*.tgz
+*.tar.gz
+.cache/
+.mypy_cache/
 .pytest_cache/
-.coverage
+.ruff_cache/
+
+# Secrets and local configuration files
+# IMPORTANT: Never include sensitive files in the Docker build context
+*.env
+.env.example
+
+# Test & Coverage Reports
+*.coverage
 htmlcov/
 *.cover
 
-# Cache
-.cache/
-.mypy_cache
-.pytest_cache
-.ruff_cache
-.gradio
-.logfire
-temp/
+# LightRAG specific (if these are runtime generated and large)
+# .rag_storage/ # If we don't want to include pre-existing local storage in the image
 
-# Exclude files and folders
-*.yml
-.dockerignore
-Makefile
+# Other project specific (adjust as needed)
+# /tests/ # Only if tests are not needed in the image
+# /scripts/ # Only if scripts are not needed in the image
+# TODO.md
+# .python-version
 
-# Exclude other projects
-/tests
-/scripts
-
-# Python version manager file
-.python-version
-
-# Exclude Git-related files
-.git
-.github
-.gitignore
-.pre-commit-config.yaml
+# IMPORTANT: Ensure files essential for the build like Dockerfile,
+# pyproject.toml, uv.lock, and the application source code
+# are NOT listed here.
