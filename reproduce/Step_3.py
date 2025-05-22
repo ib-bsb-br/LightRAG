@@ -1,5 +1,6 @@
-import re
 import json
+import re
+
 from lightrag import LightRAG, QueryParam
 from lightrag.utils import always_get_an_event_loop
 
@@ -28,9 +29,10 @@ def run_queries_and_save_to_json(
 ):
     loop = always_get_an_event_loop()
 
-    with open(output_file, "a", encoding="utf-8") as result_file, open(
-        error_file, "a", encoding="utf-8"
-    ) as err_file:
+    with (
+        open(output_file, "a", encoding="utf-8") as result_file,
+        open(error_file, "a", encoding="utf-8") as err_file,
+    ):
         result_file.write("[\n")
         first_entry = True
 

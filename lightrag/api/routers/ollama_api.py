@@ -1,18 +1,19 @@
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-import logging
-import time
-import json
-import re
-from enum import Enum
-from fastapi.responses import StreamingResponse
 import asyncio
+import json
+import logging
+import re
+import time
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from ascii_colors import trace_exception
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
 from lightrag import LightRAG, QueryParam
+from lightrag.api.utils_api import get_combined_auth_dependency, ollama_server_infos
 from lightrag.utils import TiktokenTokenizer
-from lightrag.api.utils_api import ollama_server_infos, get_combined_auth_dependency
-from fastapi import Depends
 
 
 # query mode according to query prefix (bypass is not LightRAG quer mode)

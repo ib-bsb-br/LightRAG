@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from enum import Enum
 import os
-from dotenv import load_dotenv
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import (
     Any,
+    Callable,
     Literal,
     TypedDict,
     TypeVar,
-    Callable,
 )
-from .utils import EmbeddingFunc
+
+from dotenv import load_dotenv
+
 from .types import KnowledgeGraph
+from .utils import EmbeddingFunc
 
 # use the .env that is inside the current folder
 # allows to use different .env file for each lightrag instance

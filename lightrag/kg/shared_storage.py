@@ -1,9 +1,9 @@
+import asyncio
 import os
 import sys
-import asyncio
-from multiprocessing.synchronize import Lock as ProcessLock
 from multiprocessing import Manager
-from typing import Any, Dict, Optional, Union, TypeVar, Generic
+from multiprocessing.synchronize import Lock as ProcessLock
+from typing import Any, Dict, Generic, Optional, TypeVar, Union
 
 
 # Define a direct print function for critical logs that must be visible in all processes

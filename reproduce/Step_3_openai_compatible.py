@@ -1,10 +1,12 @@
+import json
 import os
 import re
-import json
+
+import numpy as np
+
 from lightrag import LightRAG, QueryParam
 from lightrag.llm.openai import openai_complete_if_cache, openai_embed
 from lightrag.utils import EmbeddingFunc, always_get_an_event_loop
-import numpy as np
 
 
 ## For Upstage API
@@ -59,9 +61,10 @@ def run_queries_and_save_to_json(
 ):
     loop = always_get_an_event_loop()
 
-    with open(output_file, "a", encoding="utf-8") as result_file, open(
-        error_file, "a", encoding="utf-8"
-    ) as err_file:
+    with (
+        open(output_file, "a", encoding="utf-8") as result_file,
+        open(error_file, "a", encoding="utf-8") as err_file,
+    ):
         result_file.write("[\n")
         first_entry = True
 

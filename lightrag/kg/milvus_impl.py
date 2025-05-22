@@ -1,12 +1,14 @@
 import asyncio
 import os
-from typing import Any, final
 from dataclasses import dataclass
+from typing import Any, final
+
 import numpy as np
-from lightrag.utils import logger, compute_mdhash_id
-from ..base import BaseVectorStorage
 import pipmaster as pm
 
+from lightrag.utils import compute_mdhash_id, logger
+
+from ..base import BaseVectorStorage
 
 if not pm.is_installed("configparser"):
     pm.install("configparser")
@@ -15,6 +17,7 @@ if not pm.is_installed("pymilvus"):
     pm.install("pymilvus")
 
 import configparser
+
 from pymilvus import MilvusClient  # type: ignore
 
 config = configparser.ConfigParser()

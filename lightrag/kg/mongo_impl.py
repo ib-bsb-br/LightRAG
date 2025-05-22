@@ -1,10 +1,11 @@
+import asyncio
+import configparser
 import os
 from dataclasses import dataclass, field
-import numpy as np
-import configparser
-import asyncio
-
 from typing import Any, List, Union, final
+
+import numpy as np
+import pipmaster as pm
 
 from ..base import (
     BaseGraphStorage,
@@ -15,9 +16,8 @@ from ..base import (
     DocStatusStorage,
 )
 from ..namespace import NameSpace, is_namespace
-from ..utils import logger, compute_mdhash_id
-from ..types import KnowledgeGraph, KnowledgeGraphNode, KnowledgeGraphEdge
-import pipmaster as pm
+from ..types import KnowledgeGraph, KnowledgeGraphEdge, KnowledgeGraphNode
+from ..utils import compute_mdhash_id, logger
 
 if not pm.is_installed("pymongo"):
     pm.install("pymongo")
@@ -27,11 +27,11 @@ if not pm.is_installed("motor"):
 
 from motor.motor_asyncio import (  # type: ignore
     AsyncIOMotorClient,
-    AsyncIOMotorDatabase,
     AsyncIOMotorCollection,
+    AsyncIOMotorDatabase,
 )
-from pymongo.operations import SearchIndexModel  # type: ignore
 from pymongo.errors import PyMongoError  # type: ignore
+from pymongo.operations import SearchIndexModel  # type: ignore
 
 config = configparser.ConfigParser()
 config.read("config.ini", "utf-8")

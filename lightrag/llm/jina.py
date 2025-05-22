@@ -1,4 +1,5 @@
 import os
+
 import pipmaster as pm  # Pipmaster for dynamic library install
 
 # install specific modules
@@ -8,8 +9,8 @@ if not pm.is_installed("tenacity"):
     pm.install("tenacity")
 
 
-import numpy as np
 import aiohttp
+import numpy as np
 
 
 async def fetch_data(url, headers, data):

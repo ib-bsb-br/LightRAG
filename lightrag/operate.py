@@ -1,41 +1,42 @@
 from __future__ import annotations
-from functools import partial
 
 import asyncio
 import json
-import re
 import os
-from typing import Any, AsyncIterator
+import re
+import time
 from collections import Counter, defaultdict
+from functools import partial
+from typing import Any, AsyncIterator
 
-from .utils import (
-    logger,
-    clean_str,
-    compute_mdhash_id,
-    Tokenizer,
-    is_float_regex,
-    normalize_extracted_info,
-    pack_user_ass_to_openai_messages,
-    split_string_by_multi_markers,
-    truncate_list_by_token_size,
-    process_combine_contexts,
-    compute_args_hash,
-    handle_cache,
-    save_to_cache,
-    CacheData,
-    get_conversation_turns,
-    use_llm_func_with_cache,
-)
+from dotenv import load_dotenv
+
 from .base import (
     BaseGraphStorage,
     BaseKVStorage,
     BaseVectorStorage,
-    TextChunkSchema,
     QueryParam,
+    TextChunkSchema,
 )
 from .prompt import GRAPH_FIELD_SEP, PROMPTS
-import time
-from dotenv import load_dotenv
+from .utils import (
+    CacheData,
+    Tokenizer,
+    clean_str,
+    compute_args_hash,
+    compute_mdhash_id,
+    get_conversation_turns,
+    handle_cache,
+    is_float_regex,
+    logger,
+    normalize_extracted_info,
+    pack_user_ass_to_openai_messages,
+    process_combine_contexts,
+    save_to_cache,
+    split_string_by_multi_markers,
+    truncate_list_by_token_size,
+    use_llm_func_with_cache,
+)
 
 # use the .env that is inside the current folder
 # allows to use different .env file for each lightrag instance
@@ -290,7 +291,7 @@ async def _merge_nodes_then_upsert(
 
     if num_fragment > 1:
         if num_fragment >= force_llm_summary_on_merge:
-            status_message = f"LLM merge N: {entity_name} | {num_new_fragment}+{num_fragment-num_new_fragment}"
+            status_message = f"LLM merge N: {entity_name} | {num_new_fragment}+{num_fragment - num_new_fragment}"
             logger.info(status_message)
             if pipeline_status is not None and pipeline_status_lock is not None:
                 async with pipeline_status_lock:
@@ -305,7 +306,7 @@ async def _merge_nodes_then_upsert(
                 llm_response_cache,
             )
         else:
-            status_message = f"Merge N: {entity_name} | {num_new_fragment}+{num_fragment-num_new_fragment}"
+            status_message = f"Merge N: {entity_name} | {num_new_fragment}+{num_fragment - num_new_fragment}"
             logger.info(status_message)
             if pipeline_status is not None and pipeline_status_lock is not None:
                 async with pipeline_status_lock:
@@ -454,7 +455,7 @@ async def _merge_edges_then_upsert(
 
     if num_fragment > 1:
         if num_fragment >= force_llm_summary_on_merge:
-            status_message = f"LLM merge E: {src_id} - {tgt_id} | {num_new_fragment}+{num_fragment-num_new_fragment}"
+            status_message = f"LLM merge E: {src_id} - {tgt_id} | {num_new_fragment}+{num_fragment - num_new_fragment}"
             logger.info(status_message)
             if pipeline_status is not None and pipeline_status_lock is not None:
                 async with pipeline_status_lock:
@@ -469,7 +470,7 @@ async def _merge_edges_then_upsert(
                 llm_response_cache,
             )
         else:
-            status_message = f"Merge E: {src_id} - {tgt_id} | {num_new_fragment}+{num_fragment-num_new_fragment}"
+            status_message = f"Merge E: {src_id} - {tgt_id} | {num_new_fragment}+{num_fragment - num_new_fragment}"
             logger.info(status_message)
             if pipeline_status is not None and pipeline_status_lock is not None:
                 async with pipeline_status_lock:
