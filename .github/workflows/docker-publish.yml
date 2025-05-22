@@ -14,7 +14,7 @@ jobs:
     env:
       # Define IMAGE_NAME at the job level to handle potential parsing issues with toLowerCase() in global env.
       # github.event.repository.name is converted to lowercase for the image name.
-      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name.toLowerCase() }}
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
