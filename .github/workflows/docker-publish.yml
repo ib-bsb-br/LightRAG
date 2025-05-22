@@ -1,4 +1,3 @@
-# .github/workflows/docker-publish.yml
 name: Build and Publish LightRAG Docker Image
 
 on:
@@ -9,12 +8,13 @@ on:
       - 'v*.*.*' # Trigger on semantic version tags (e.g., v1.0.0, v1.2.3)
   workflow_dispatch: # Allows manual triggering from the GitHub UI
 
-env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name.toLowerCase() }}
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      # Define IMAGE_NAME at the job level to handle potential parsing issues with toLowerCase() in global env.
+      # github.event.repository.name is converted to lowercase for the image name.
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name.toLowerCase() }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,9 +22,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: image=moby/buildkit:v0.13.1
+          driver-opts: image=moby/buildkit:v0.13.1 # Using a specific buildkit version
 
       - name: Login to GitHub Container Registry (GHCR)
+        # Login is skipped for pull_request events, though this workflow isn't triggered by them.
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
@@ -32,18 +33,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            # type=schedule # Example: if you have scheduled runs
+            type=ref,event=branch # Creates a tag for the branch name
+            type=ref,event=pr # Creates a tag for PRs (if workflow triggered on PR)
+            type=semver,pattern={{version}} # For Git tags like v1.2.3
+            type=semver,pattern={{major}}.{{minor}} # For Git tags like v1.2
+            type=sha,prefix=,suffix=,format=short # Git SHA as a tag
+            # Create 'latest' tag for pushes to the main branch
+            type=match,pattern=main,group=0,value=latest
+            # Example for specific tag pattern:
+            # type=match,pattern=v(\d+\.\d+\.\d+),group=1
+
       - name: Build and push Docker image
+        id: push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
+          # Push conditions:
+          # - On push to 'main' branch
+          # - On push to any tag (e.g., v1.2.3)
+          # - On manual 'workflow_dispatch'
           push: ${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache,mode=max
-          # Pass GitHub secrets as build arguments
+          platforms: linux/amd64 # Specify target platform(s)
+          # Cache settings: Using env.IMAGE_NAME (which is lowercased) as the base for cache path.
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             NEO4J_PASSWORD=${{ secrets.NEO4J_PASSWORD }}
@@ -55,10 +78,11 @@ jobs:
             EMBEDDING_DIM=${{ secrets.EMBEDDING_DIM || '1536' }}
 
       - name: Generate artifact attestation
-        # Only generate attestation if the image was successfully pushed
+        # Generate attestation only if the image was successfully pushed (digest is available)
+        # and the event conditions for pushing were met.
         if: steps.push.outputs.digest && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) || github.event_name == 'workflow_dispatch')
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-name: ${{ env.IMAGE_NAME }} # Attestation for the lowercased image name
+          subject-digest: ${{ steps.push.outputs.digest }} # Digest from the build-push step
           push-to-registry: true
