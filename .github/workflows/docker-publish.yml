@@ -11,6 +11,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     env:
       # Define IMAGE_NAME at the job level to handle potential parsing issues with toLowerCase() in global env.
       # github.event.repository.name is converted to lowercase for the image name.
