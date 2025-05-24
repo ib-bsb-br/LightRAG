@@ -23,7 +23,7 @@ jobs:
     env:
       # Define IMAGE_NAME, ensuring it's lowercase for GHCR compatibility and consistency.
       # ghcr.io/OWNER/IMAGE_NAME
-      IMAGE_NAME: ghcr.io/${{ lower(github.repository_owner) }}/${{ lower(github.event.repository.name) }}
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
 
     steps:
       - name: Checkout repository
